@@ -117,7 +117,7 @@ _For 3PL & fleet operators_
 | Smart Contracts | Solidity                                           |
 | Data            | MongoDB Atlas, Mongoose TS                         |
 | Vector Search   | Chroma, `@langchain/community`                     |
-| AI              | LangChain JS, OpenAI GPT-4o, Cron jobs (node-cron) |
+| AI              | LangChain JS, Google Gemini 2.5 Pro, Cron jobs (node-cron) |
 | Auth            | Civic Auth + Core (wallet)                         |
 | DevOps          | pnpm monorepo, Docker, GitHub Actions              |
 

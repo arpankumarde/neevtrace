@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  MANUFACTURER
+  LOGISTICS
+  SUPPLIER
+}
+
+enum DocumentType {
+  CIIPL
+  ISO
+  BIS
+  ROHS
+  GST_CERTIFICATE
+  PAN_CARD
+  TRADE_LICENSE
+  INCORPORATION_CERTIFICATE
+  BANK_STATEMENT
+  ADDRESS_PROOF
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BatchStatus {
+  CREATED
+  IN_TRANSIT
+  DELIVERED
+  COMPLETED
+}
+
+enum BiddingStatus {
+  OPEN
+  CLOSED
+  AWARDED
+  CANCELLED
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+model Manufacturer {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  firstName          String
+  lastName           String
+  email              String    @unique
+  phone              String
+  address            String
+  city               String
+  state              String
+  country            String
+  pincode            String
+  companyName        String
+  registrationNumber String    @unique
+  website            String?
+  designation        String
+  isActive           Boolean   @default(true)
+  lastLoginAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  productionCapacity Int?
+  certifications     String[] // Array of certification names
+  specializations    String[] // Types of products manufactured
+
+  // Relationships
+  batches          Batch[]
+  materialRequests MaterialRequest[]
+  documents        TaxDocument[]
+}
+
+model Supplier {
+  id                 String        @id @default(cuid())
+  userId             String        @unique
+  firstName          String
+  lastName           String
+  email              String        @unique
+  phone              String
+  address            String?
+  city               String?
+  state              String?
+  country            String?
+  pincode            String?
+  companyName        String?
+  registrationNumber String        @unique
+  website            String?
+  isActive           Boolean       @default(true)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  suppliedProducts   String[]
+  minOrderValue      Decimal?
+  paymentTerms       String?
+  leadTime           Int? // Days
+  bids               Bid[]
+  documents          TaxDocument[]
+}
+
+model Logistics {
+  id                 String        @id @default(cuid())
+  userId             String        @unique
+  firstName          String
+  lastName           String
+  email              String        @unique
+  phone              String
+  address            String
+  city               String
+  state              String
+  country            String
+  pincode            String
+  companyName        String
+  registrationNumber String        @unique
+  website            String?
+  designation        String
+  isActive           Boolean       @default(true)
+  lastLoginAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  fleetSize          Int?
+  serviceAreas       String[]
+  transportTypes     String[]
+  warehouseCapacity  Int?
+  shipments          Shipment[]
+  documents          TaxDocument[]
+}
+
+model Batch {
+  id             String      @id @default(cuid())
+  batchNumber    String      @unique
+  productName    String
+  productCode    String?
+  description    String?
+  quantity       Int
+  unit           String
+  manufacturerId String
+  status         BatchStatus @default(CREATED)
+  manufacturedAt DateTime
+  expiryDate     DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // Quality and compliance
+  qualityGrade  String?
+  testResults   Json? // Store test results as JSON
+  storageTemp   String?
+  handlingNotes String?
+
+  // Relationships
+  manufacturer        Manufacturer         @relation(fields: [manufacturerId], references: [id])
+  complianceDocuments ComplianceDocument[]
+  shipments           Shipment[]
+}
+
+model ComplianceDocument {
+  id                String         @id @default(cuid())
+  batchId           String
+  type              DocumentType
+  documentUrl       String
+  status            DocumentStatus @default(PENDING)
+  uploadedAt        DateTime       @default(now())
+  verifiedAt        DateTime?
+  expiryDate        DateTime?
+  issuer            String?
+  remarks           String?
+  certificateNumber String?
+  testReportNumber  String?
+  batch             Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+}
+
+model Shipment {
+  id                String    @id @default(cuid())
+  shipmentNumber    String    @unique
+  batchId           String
+  logisticsId       String
+  fromAddress       String
+  toAddress         String
+  estimatedDelivery DateTime
+  actualDelivery    DateTime?
+  status            String    @default("PENDING")
+  trackingNumber    String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Shipping details
+  weight       Decimal?
+  volume       Decimal?
+  temperature  String?
+  specialNotes String?
+
+  // Relationships
+  batch     Batch     @relation(fields: [batchId], references: [id])
+  logistics Logistics @relation(fields: [logisticsId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  entityType String // "batch", "shipment", "document", etc.
+  entityId   String
+  action     String // "created", "updated", "deleted", "approved", etc.
+  userId     String
+  userRole   UserRole
+  changes    Json? // Store the changes made
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+}
+
+model TaxDocument {
+  id                String         @id @default(cuid())
+  entityType        String // "manufacturer", "supplier", "logistics"
+  entityId          String
+  type              DocumentType
+  documentUrl       String
+  status            DocumentStatus @default(PENDING)
+  uploadedAt        DateTime       @default(now())
+  verifiedAt        DateTime?
+  expiryDate        DateTime?
+  remarks           String?
+  certificateNumber String?
+  testReportNumber  String?
+  manufacturer      Manufacturer?  @relation(fields: [entityId], references: [id], onDelete: Cascade, map: "TaxDocument_manufacturer_fkey")
+  supplier          Supplier?      @relation(fields: [entityId], references: [id], onDelete: Cascade, map: "TaxDocument_supplier_fkey")
+  logistics         Logistics?     @relation(fields: [entityId], references: [id], onDelete: Cascade, map: "TaxDocument_logistics_fkey")
+}
+
+model MaterialRequest {
+  id             String        @id @default(cuid())
+  requestNumber  String        @unique
+  manufacturerId String
+  materialName   String
+  description    String?
+  quantity       Int
+  unit           String
+  requiredDate   DateTime
+  budgetRange    String? // e.g., "₹10,000 - ₹15,000"
+  specifications Json? // Technical specifications
+  status         BiddingStatus @default(OPEN)
+  selectedBidId  String?       @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  closingDate    DateTime
+
+  // Quality requirements
+  qualityStandards String[] // e.g., ["ISO 9001", "BIS"]
+  certificationReq String[] // Required certifications
+
+  // Relationships
+  manufacturer Manufacturer @relation(fields: [manufacturerId], references: [id])
+  bids         Bid[]
+  selectedBid  Bid?         @relation("SelectedBid", fields: [selectedBidId], references: [id])
+}
+
+model Bid {
+  id                String           @id @default(cuid())
+  bidNumber         String           @unique
+  materialRequestId String
+  supplierId        String
+  pricePerUnit      Decimal
+  totalPrice        Decimal
+  leadTime          Int // Days
+  validUntil        DateTime
+  status            BidStatus        @default(PENDING)
+  proposedDate      DateTime
+  remarks           String?
+  submittedAt       DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  certifications    String[] // Certifications supplier holds
+  sampleAvailable   Boolean          @default(false)
+  warrantyPeriod    Int? // Months
+  paymentTerms      String?
+  materialRequest   MaterialRequest  @relation(fields: [materialRequestId], references: [id])
+  supplier          Supplier         @relation(fields: [supplierId], references: [id])
+  selectedFor       MaterialRequest? @relation("SelectedBid")
+}

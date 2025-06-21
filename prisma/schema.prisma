@@ -39,6 +39,21 @@ enum BatchStatus {
   COMPLETED
 }
 
+enum ShipmentStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+enum WaypointStatus {
+  PENDING
+  IN_TRANSIT
+  ARRIVED
+  DEPARTED
+  COMPLETED
+}
+
 enum BiddingStatus {
   OPEN
   CLOSED
@@ -53,146 +68,141 @@ enum BidStatus {
   WITHDRAWN
 }
 
-model Manufacturer {
-  id                 String    @id @default(cuid())
-  userId             String    @unique
-  firstName          String
-  lastName           String
-  email              String    @unique
-  phone              String
-  address            String
-  city               String
-  state              String
-  country            String
-  pincode            String
-  companyName        String
-  registrationNumber String    @unique
-  website            String?
-  designation        String
-  isActive           Boolean   @default(true)
-  lastLoginAt        DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  productionCapacity Int?
-  certifications     String[] // Array of certification names
-  specializations    String[] // Types of products manufactured
-
-  // Relationships
-  batches          Batch[]
-  materialRequests MaterialRequest[]
-  documents        TaxDocument[]
+enum LogisticsBidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
 }
 
-model Supplier {
-  id                 String        @id @default(cuid())
-  userId             String        @unique
-  firstName          String
-  lastName           String
-  email              String        @unique
-  phone              String
+model Manufacturer {
+  id                 String            @id @default(uuid())
+  userId             String            @unique
+  name               String            @default("Unknown Manufacturer")
+  email              String            @unique
+  phone              String?
   address            String?
   city               String?
   state              String?
   country            String?
   pincode            String?
-  companyName        String?
+  registrationNumber String            @unique
+  website            String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  productionCapacity Int?
+  certifications     String[] // Array of certification names
+  specializations    String[] // Types of products manufactured
+  companyDocName     String?
+  companyDocUrl      String?
+  certDocName        String?
+  certDocUrl         String?
+  // Relationships
+  batches            Batch[]
+  materialRequests   MaterialRequest[]
+}
+
+model Supplier {
+  id                 String        @id @default(uuid())
+  userId             String        @unique
+  name               String
+  email              String        @unique
+  phone              String?
+  address            String?
+  city               String?
+  state              String?
+  country            String?
+  pincode            String?
   registrationNumber String        @unique
   website            String?
-  isActive           Boolean       @default(true)
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   suppliedProducts   String[]
   minOrderValue      Decimal?
   paymentTerms       String?
-  leadTime           Int? // Days
-  bids               Bid[]
-  documents          TaxDocument[]
+  leadTime           Int?
+  bids               SupplierBid[]
 }
 
 model Logistics {
-  id                 String        @id @default(cuid())
-  userId             String        @unique
-  firstName          String
-  lastName           String
-  email              String        @unique
-  phone              String
-  address            String
-  city               String
-  state              String
-  country            String
-  pincode            String
-  companyName        String
-  registrationNumber String        @unique
+  id                 String         @id @default(uuid())
+  userId             String         @unique
+  name               String
+  email              String         @unique
+  phone              String?
+  address            String?
+  city               String?
+  state              String?
+  country            String?
+  pincode            String?
+  registrationNumber String         @unique
   website            String?
-  designation        String
-  isActive           Boolean       @default(true)
-  lastLoginAt        DateTime?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  designation        String?
   fleetSize          Int?
   serviceAreas       String[]
   transportTypes     String[]
   warehouseCapacity  Int?
   shipments          Shipment[]
-  documents          TaxDocument[]
+  logisticsBids      LogisticsBid[] // Logistics can bid on multiple batches
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 }
 
 model Batch {
-  id             String      @id @default(cuid())
-  batchNumber    String      @unique
-  productName    String
-  productCode    String?
-  description    String?
-  quantity       Int
-  unit           String
-  manufacturerId String
-  status         BatchStatus @default(CREATED)
-  manufacturedAt DateTime
-  expiryDate     DateTime?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-
-  // Quality and compliance
-  qualityGrade  String?
-  testResults   Json? // Store test results as JSON
-  storageTemp   String?
-  handlingNotes String?
-
+  id                     String               @id @default(uuid())
+  batchNumber            String               @unique
+  productName            String
+  productCode            String?
+  description            String?
+  quantity               Int
+  unit                   String?
+  manufacturerId         String
+  status                 BatchStatus          @default(CREATED)
+  qualityGrade           String?
+  testResults            Json?
+  storageTemp            String?
+  handlingNotes          String?
+  expiryDate             DateTime?
+  destinationAddress     String?
+  selectedLogisticsBidId String?              @unique // Only one logistics provider selected
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
   // Relationships
-  manufacturer        Manufacturer         @relation(fields: [manufacturerId], references: [id])
-  complianceDocuments ComplianceDocument[]
-  shipments           Shipment[]
+  manufacturer           Manufacturer         @relation(fields: [manufacturerId], references: [id])
+  materialRequests       MaterialRequest[]
+  complianceDocuments    ComplianceDocument[]
+  shipments              Shipment[]
+  logisticsBids          LogisticsBid[] // Multiple logistics providers can bid
+  selectedLogisticsBid   LogisticsBid?        @relation("SelectedLogisticsBid", fields: [selectedLogisticsBidId], references: [id])
 }
 
 model ComplianceDocument {
-  id                String         @id @default(cuid())
+  id                String       @id @default(uuid())
   batchId           String
   type              DocumentType
   documentUrl       String
-  status            DocumentStatus @default(PENDING)
-  uploadedAt        DateTime       @default(now())
-  verifiedAt        DateTime?
   expiryDate        DateTime?
   issuer            String?
   remarks           String?
   certificateNumber String?
   testReportNumber  String?
-  batch             Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  uploadedAt        DateTime     @default(now())
+  batch             Batch        @relation(fields: [batchId], references: [id], onDelete: Cascade)
 }
 
 model Shipment {
-  id                String    @id @default(cuid())
-  shipmentNumber    String    @unique
+  id                String         @id @default(uuid())
+  shipmentNumber    String         @unique
   batchId           String
   logisticsId       String
   fromAddress       String
   toAddress         String
   estimatedDelivery DateTime
   actualDelivery    DateTime?
-  status            String    @default("PENDING")
+  status            ShipmentStatus @default(PENDING)
   trackingNumber    String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   // Shipping details
   weight       Decimal?
@@ -200,13 +210,20 @@ model Shipment {
   temperature  String?
   specialNotes String?
 
+  // Multi-leg journey support
+  totalDistance  Decimal? // Total distance in km
+  estimatedCO2   Decimal? // Estimated CO2 emissions
+  actualCO2      Decimal? // Actual CO2 emissions
+  transportModes String[] // ["road", "rail", "sea", "air"]
+
   // Relationships
-  batch     Batch     @relation(fields: [batchId], references: [id])
-  logistics Logistics @relation(fields: [logisticsId], references: [id])
+  batch     Batch      @relation(fields: [batchId], references: [id])
+  logistics Logistics  @relation(fields: [logisticsId], references: [id])
+  waypoints Waypoint[] // Multiple waypoints for the journey
 }
 
 model AuditLog {
-  id         String   @id @default(cuid())
+  id         String   @id @default(uuid())
   entityType String // "batch", "shipment", "document", etc.
   entityId   String
   action     String // "created", "updated", "deleted", "approved", etc.
@@ -218,70 +235,93 @@ model AuditLog {
   createdAt  DateTime @default(now())
 }
 
-model TaxDocument {
-  id                String         @id @default(cuid())
-  entityType        String // "manufacturer", "supplier", "logistics"
-  entityId          String
-  type              DocumentType
-  documentUrl       String
-  status            DocumentStatus @default(PENDING)
-  uploadedAt        DateTime       @default(now())
-  verifiedAt        DateTime?
-  expiryDate        DateTime?
-  remarks           String?
-  certificateNumber String?
-  testReportNumber  String?
-  manufacturer      Manufacturer?  @relation(fields: [entityId], references: [id], onDelete: Cascade, map: "TaxDocument_manufacturer_fkey")
-  supplier          Supplier?      @relation(fields: [entityId], references: [id], onDelete: Cascade, map: "TaxDocument_supplier_fkey")
-  logistics         Logistics?     @relation(fields: [entityId], references: [id], onDelete: Cascade, map: "TaxDocument_logistics_fkey")
-}
-
 model MaterialRequest {
-  id             String        @id @default(cuid())
-  requestNumber  String        @unique
-  manufacturerId String
-  materialName   String
-  description    String?
-  quantity       Int
-  unit           String
-  requiredDate   DateTime
-  budgetRange    String? // e.g., "₹10,000 - ₹15,000"
-  specifications Json? // Technical specifications
-  status         BiddingStatus @default(OPEN)
-  selectedBidId  String?       @unique
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  closingDate    DateTime
-
+  id               String        @id @default(uuid())
+  batchId          String
+  manufacturerId   String
+  materialName     String
+  description      String?
+  quantity         Int
+  unit             String?
+  budgetRange      String?
+  specifications   Json?
+  status           BiddingStatus @default(OPEN)
+  selectedBidId    String?       @unique
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  closingDate      DateTime
   // Quality requirements
-  qualityStandards String[] // e.g., ["ISO 9001", "BIS"]
-  certificationReq String[] // Required certifications
-
+  qualityStandards String[]
+  certificationReq String[]
   // Relationships
-  manufacturer Manufacturer @relation(fields: [manufacturerId], references: [id])
-  bids         Bid[]
-  selectedBid  Bid?         @relation("SelectedBid", fields: [selectedBidId], references: [id])
+  batch            Batch         @relation(fields: [batchId], references: [id])
+  manufacturer     Manufacturer  @relation(fields: [manufacturerId], references: [id])
+  bids             SupplierBid[]
+  selectedBid      SupplierBid?  @relation("SelectedBid", fields: [selectedBidId], references: [id])
 }
 
-model Bid {
-  id                String           @id @default(cuid())
-  bidNumber         String           @unique
+model SupplierBid {
+  id                String    @id @default(uuid())
   materialRequestId String
   supplierId        String
-  pricePerUnit      Decimal
-  totalPrice        Decimal
-  leadTime          Int // Days
-  validUntil        DateTime
-  status            BidStatus        @default(PENDING)
+  bidPrice          Decimal
+  deliveryTimeline  Int // Days
   proposedDate      DateTime
+  validUntil        DateTime
+  status            BidStatus @default(PENDING)
   remarks           String?
-  submittedAt       DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  certifications    String[] // Certifications supplier holds
-  sampleAvailable   Boolean          @default(false)
-  warrantyPeriod    Int? // Months
+  certifications    String[]
+  complianceDocUrls String[]
   paymentTerms      String?
-  materialRequest   MaterialRequest  @relation(fields: [materialRequestId], references: [id])
-  supplier          Supplier         @relation(fields: [supplierId], references: [id])
-  selectedFor       MaterialRequest? @relation("SelectedBid")
+  warrantyPeriod    Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relationships
+  materialRequest MaterialRequest  @relation(fields: [materialRequestId], references: [id])
+  supplier        Supplier         @relation(fields: [supplierId], references: [id])
+  selectedFor     MaterialRequest? @relation("SelectedBid")
+
+  @@unique([materialRequestId, supplierId])
+}
+
+model LogisticsBid {
+  id              String             @id @default(uuid())
+  batchId         String
+  logisticsId     String
+  bidPrice        Decimal
+  estimatedTime   Int // Estimated delivery time in hours
+  pickupDate      DateTime
+  deliveryDate    DateTime
+  vehicleType     String // Truck, Container, etc.
+  capacity        String // Weight/volume capacity
+  route           String? // Suggested route
+  specialHandling String? // Temperature controlled, fragile, etc.
+  insurance       Boolean            @default(false)
+  status          LogisticsBidStatus @default(PENDING)
+  remarks         String?
+  validUntil      DateTime
+  submittedAt     DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  batch           Batch              @relation(fields: [batchId], references: [id])
+  logistics       Logistics          @relation(fields: [logisticsId], references: [id])
+  selectedFor     Batch?             @relation("SelectedLogisticsBid")
+
+  @@unique([batchId, logisticsId]) // One bid per logistics provider per batch
+}
+
+model Waypoint {
+  id               String         @id @default(uuid())
+  shipmentId       String
+  sequence         Int
+  address          String
+  modeOfTransport  String?
+  estimatedArrival DateTime?
+  actualArrival    DateTime?
+  status           WaypointStatus @default(PENDING)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  shipment         Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@unique([shipmentId, sequence])
 }

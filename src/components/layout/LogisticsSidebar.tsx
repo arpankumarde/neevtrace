@@ -15,7 +15,6 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
-import { deleteCookie } from "cookies-next";
 import { MdDashboard } from "react-icons/md";
 import {
   FaBriefcase,
@@ -26,11 +25,13 @@ import {
 } from "react-icons/fa";
 import Image from "next/image";
 import { FileText } from "lucide-react";
+import { useUser } from "@civic/auth/react";
 
 export function LogisticsSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
+  const { user, isLoading, signOut } = useUser();
 
   return (
     <Sidebar {...props}>
@@ -149,8 +150,7 @@ export function LogisticsSidebar({
               <Button
                 variant={"destructive"}
                 onClick={() => {
-                  deleteCookie("ykapptoken");
-                  router.push("/applicant/login");
+                  signOut();
                 }}
               >
                 Logout

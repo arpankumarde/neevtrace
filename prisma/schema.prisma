@@ -293,7 +293,7 @@ model LogisticsBid {
   id              String             @id @default(uuid())
   batchId         String
   logisticsId     String
-  bidPrice        Decimal
+  bidPrice        Int
   estimatedTime   Int // Estimated delivery time in hours
   pickupDate      DateTime
   deliveryDate    DateTime
@@ -304,7 +304,10 @@ model LogisticsBid {
   insurance       Boolean            @default(false)
   status          LogisticsBidStatus @default(PENDING)
   remarks         String?
-  validUntil      DateTime
+  pros            String?
+  cons            String?
+  emission        String? // Estimated CO2 emissions
+  validUntil      DateTime?
   submittedAt     DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   batch           Batch              @relation(fields: [batchId], references: [id])

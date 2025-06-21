@@ -39,11 +39,11 @@ export function LogisticsSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/applicant/dashboard">
+              <Link href="/logistics/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Image
                     src="/logo.png"
-                    alt="Yukti Logo"
+                    alt="Neevtrace Logo"
                     width={60}
                     height={60}
                   />
@@ -67,7 +67,7 @@ export function LogisticsSidebar({
                   className="py-6 text-lg duration-200 transition-colors"
                   asChild
                 >
-                  <Link href="/applicant/dashboard">
+                  <Link href="/logistics">
                     <MdDashboard className="!size-5" />
                     <span>Dashboard</span>
                   </Link>
@@ -78,7 +78,7 @@ export function LogisticsSidebar({
                   className="py-6 text-lg duration-200 transition-colors"
                   asChild
                 >
-                  <Link href="/applicant/dashboard/jobs">
+                  <Link href="/logistics/bidding-area">
                     <FaBriefcase className="!size-5" />
                     <span>Bidding Area</span>
                   </Link>
@@ -89,44 +89,9 @@ export function LogisticsSidebar({
                   className="py-6 text-lg duration-200 transition-colors"
                   asChild
                 >
-                  <Link href="/applicant/dashboard/applied-jobs">
+                  <Link href="/logistics/bids-won">
                     <FaClipboardCheck className="!size-5" />
-                    <span></span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/applicant/dashboard/interview">
-                    <FaUserTie className="!size-5" />
-                    <span>Interviews</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/applicant/dashboard/resumes">
-                    <FileText className="!size-5" />
-                    <span>Resumes</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/applicant/dashboard/resume-analyser">
-                    <FaFileAlt className="!size-5" />
-                    <span>Resume Analyser</span>
+                    <span>Bids Won</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -139,7 +104,7 @@ export function LogisticsSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link href="/applicant/dashboard/profile">
+              <Link href="/logistics/profile">
                 <FaUser className="!size-5" />
                 <span>My Profile</span>
               </Link>

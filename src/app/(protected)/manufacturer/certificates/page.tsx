@@ -215,7 +215,7 @@ export default function CertificatesPage() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Certificates</h1>
-                <p className="text-xs text-muted-foreground">SSSCP Platform</p>
+                <p className="text-xs text-muted-foreground">NeevTrace Platform</p>
               </div>
             </div>
             <Button onClick={() => setSelectedTab('upload')}>

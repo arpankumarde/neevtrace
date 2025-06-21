@@ -34,9 +34,13 @@ enum DocumentStatus {
 
 enum BatchStatus {
   CREATED
+  IN_PRODUCTION
+  QUALITY_CHECK
+  COMPLETED
+  SHIPPED
   IN_TRANSIT
   DELIVERED
-  COMPLETED
+  RECALLED
 }
 
 enum ShipmentStatus {
@@ -150,7 +154,7 @@ model Logistics {
 
 model Batch {
   id                     String               @id @default(uuid())
-  batchNumber            String               @unique
+  batchNumber            String               @unique // Remove the default, we'll generate it manually
   productName            String
   productCode            String?
   description            String?

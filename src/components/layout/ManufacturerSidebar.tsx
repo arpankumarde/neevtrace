@@ -11,23 +11,24 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { deleteCookie } from "cookies-next";
-import { 
-  LayoutDashboard, 
-  Package, 
-  FileText, 
-  Users, 
-  Truck, 
-  QrCode, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Package,
+  FileText,
+  Users,
+  Truck,
+  QrCode,
+  BarChart3,
   Leaf,
   LogOut,
   User,
-  Factory
+  Factory,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -44,6 +45,9 @@ export function ManufacturerSidebar({
   return (
     <Sidebar {...props}>
       <SidebarHeader>
+        <div className="flex items-center justify-between p-2">
+          <SidebarTrigger className="ml-auto" />
+        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
@@ -53,7 +57,7 @@ export function ManufacturerSidebar({
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Manufacturer</span>
-                  <span className="truncate text-xs">SSSCP Platform</span>
+                  <span className="truncate text-xs">NeevTrace Platform</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -76,7 +80,7 @@ export function ManufacturerSidebar({
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              
+
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className="py-6 text-lg duration-200 transition-colors"
@@ -88,7 +92,7 @@ export function ManufacturerSidebar({
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              
+
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className="py-6 text-lg duration-200 transition-colors"
@@ -100,7 +104,7 @@ export function ManufacturerSidebar({
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              
+
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className="py-6 text-lg duration-200 transition-colors"
@@ -112,7 +116,7 @@ export function ManufacturerSidebar({
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              
+
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className="py-6 text-lg duration-200 transition-colors"
@@ -124,7 +128,7 @@ export function ManufacturerSidebar({
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              
+
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className="py-6 text-lg duration-200 transition-colors"
@@ -136,7 +140,7 @@ export function ManufacturerSidebar({
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              
+
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className="py-6 text-lg duration-200 transition-colors"

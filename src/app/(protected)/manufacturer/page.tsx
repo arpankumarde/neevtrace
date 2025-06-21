@@ -88,7 +88,7 @@ const itemVariants = {
     y: 0,
     opacity: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100
     }
   }
@@ -157,10 +157,12 @@ export default function ManufacturerDashboard() {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-                        <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                New Batch (Coming Soon)
-              </Button>
+          <Button asChild>
+            <Link href="/manufacturer/batch-registration">
+              <Plus className="mr-2 h-4 w-4" />
+              New Batch
+            </Link>
+          </Button>
         </div>
       </motion.div>
 

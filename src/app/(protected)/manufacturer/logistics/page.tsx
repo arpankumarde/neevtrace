@@ -198,7 +198,7 @@ export default function LogisticsPage() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Logistics</h1>
-                <p className="text-xs text-muted-foreground">SSSCP Platform</p>
+                <p className="text-xs text-muted-foreground">NeevTrace Platform</p>
               </div>
             </div>
             <Button>

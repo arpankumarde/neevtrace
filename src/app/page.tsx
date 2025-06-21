@@ -89,7 +89,7 @@ export default function HomePage() {
                 <Globe className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">SSSCP</h1>
+                <h1 className="text-xl font-bold text-gray-900">NeevTrace</h1>
                 <p className="text-xs text-muted-foreground">Smart Sustainable Supply Chain</p>
               </div>
             </div>

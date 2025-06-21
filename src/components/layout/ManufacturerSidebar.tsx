@@ -16,21 +16,30 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { deleteCookie } from "cookies-next";
-import { MdDashboard } from "react-icons/md";
-import {
-  FaBriefcase,
-  FaClipboardCheck,
-  FaUserTie,
-  FaFileAlt,
-  FaUser,
-} from "react-icons/fa";
+import { 
+  LayoutDashboard, 
+  Package, 
+  FileText, 
+  Users, 
+  Truck, 
+  QrCode, 
+  BarChart3, 
+  Leaf,
+  LogOut,
+  User,
+  Factory
+} from "lucide-react";
 import Image from "next/image";
-import { FileText } from "lucide-react";
 
 export function ManufacturerSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
+
+  const handleLogout = () => {
+    deleteCookie("ykapptoken");
+    router.push("/");
+  };
 
   return (
     <Sidebar {...props}>
@@ -38,18 +47,13 @@ export function ManufacturerSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/applicant/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Image
-                    src="/logo.png"
-                    alt="Yukti Logo"
-                    width={60}
-                    height={60}
-                  />
+              <Link href="/manufacturer">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-green-600">
+                  <Factory className="text-white size-5" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Logistics</span>
-                  <span className="truncate text-xs">NeevTrace</span>
+                  <span className="truncate font-semibold">Manufacturer</span>
+                  <span className="truncate text-xs">SSSCP Platform</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -66,66 +70,81 @@ export function ManufacturerSidebar({
                   className="py-6 text-lg duration-200 transition-colors"
                   asChild
                 >
-                  <Link href="/applicant/dashboard">
-                    <MdDashboard className="!size-5" />
+                  <Link href="/manufacturer">
+                    <LayoutDashboard className="!size-5" />
                     <span>Dashboard</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className="py-6 text-lg duration-200 transition-colors"
                   asChild
                 >
-                  <Link href="/applicant/dashboard/jobs">
-                    <FaBriefcase className="!size-5" />
-                    <span>Bidding Area</span>
+                  <Link href="/manufacturer/batch-registration">
+                    <Package className="!size-5" />
+                    <span>Batch Registration</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className="py-6 text-lg duration-200 transition-colors"
                   asChild
                 >
-                  <Link href="/applicant/dashboard/applied-jobs">
-                    <FaClipboardCheck className="!size-5" />
-                    <span></span>
+                  <Link href="/manufacturer/batches">
+                    <BarChart3 className="!size-5" />
+                    <span>Batch Management</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className="py-6 text-lg duration-200 transition-colors"
                   asChild
                 >
-                  <Link href="/applicant/dashboard/interview">
-                    <FaUserTie className="!size-5" />
-                    <span>Interviews</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/applicant/dashboard/resumes">
+                  <Link href="/manufacturer/certificates">
                     <FileText className="!size-5" />
-                    <span>Resumes</span>
+                    <span>Certificates</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-
+              
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className="py-6 text-lg duration-200 transition-colors"
                   asChild
                 >
-                  <Link href="/applicant/dashboard/resume-analyser">
-                    <FaFileAlt className="!size-5" />
-                    <span>Resume Analyser</span>
+                  <Link href="/manufacturer/logistics">
+                    <Truck className="!size-5" />
+                    <span>Logistics Partners</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className="py-6 text-lg duration-200 transition-colors"
+                  asChild
+                >
+                  <Link href="/manufacturer/qr-system">
+                    <QrCode className="!size-5" />
+                    <span>QR System</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className="py-6 text-lg duration-200 transition-colors"
+                  asChild
+                >
+                  <Link href="/manufacturer/traceability">
+                    <Leaf className="!size-5" />
+                    <span>Traceability</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -138,22 +157,21 @@ export function ManufacturerSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link href="/applicant/dashboard/profile">
-                <FaUser className="!size-5" />
-                <span>My Profile</span>
+              <Link href="/manufacturer/profile">
+                <User className="!size-5" />
+                <span>Profile</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Button
-                variant={"destructive"}
-                onClick={() => {
-                  deleteCookie("ykapptoken");
-                  router.push("/applicant/login");
-                }}
+                variant="destructive"
+                className="w-full justify-start"
+                onClick={handleLogout}
               >
-                Logout
+                <LogOut className="!size-5" />
+                <span>Logout</span>
               </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -146,10 +146,10 @@ model Logistics {
   serviceAreas       String[]
   transportTypes     String[]
   warehouseCapacity  Int?
-  shipments          Shipment[]
   logisticsBids      LogisticsBid[] // Logistics can bid on multiple batches
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
+  Waypoint           Waypoint[]
 }
 
 model Batch {
@@ -175,9 +175,9 @@ model Batch {
   manufacturer           Manufacturer         @relation(fields: [manufacturerId], references: [id])
   materialRequests       MaterialRequest[]
   complianceDocuments    ComplianceDocument[]
-  shipments              Shipment[]
   logisticsBids          LogisticsBid[] // Multiple logistics providers can bid
   selectedLogisticsBid   LogisticsBid?        @relation("SelectedLogisticsBid", fields: [selectedLogisticsBidId], references: [id])
+  Waypoint               Waypoint[]
 }
 
 model ComplianceDocument {
@@ -192,38 +192,6 @@ model ComplianceDocument {
   testReportNumber  String?
   uploadedAt        DateTime     @default(now())
   batch             Batch        @relation(fields: [batchId], references: [id], onDelete: Cascade)
-}
-
-model Shipment {
-  id                String         @id @default(uuid())
-  shipmentNumber    String         @unique
-  batchId           String
-  logisticsId       String
-  fromAddress       String
-  toAddress         String
-  estimatedDelivery DateTime
-  actualDelivery    DateTime?
-  status            ShipmentStatus @default(PENDING)
-  trackingNumber    String?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-
-  // Shipping details
-  weight       Decimal?
-  volume       Decimal?
-  temperature  String?
-  specialNotes String?
-
-  // Multi-leg journey support
-  totalDistance  Decimal? // Total distance in km
-  estimatedCO2   Decimal? // Estimated CO2 emissions
-  actualCO2      Decimal? // Actual CO2 emissions
-  transportModes String[] // ["road", "rail", "sea", "air"]
-
-  // Relationships
-  batch     Batch      @relation(fields: [batchId], references: [id])
-  logistics Logistics  @relation(fields: [logisticsId], references: [id])
-  waypoints Waypoint[] // Multiple waypoints for the journey
 }
 
 model AuditLog {
@@ -319,7 +287,8 @@ model LogisticsBid {
 
 model Waypoint {
   id               String         @id @default(uuid())
-  shipmentId       String
+  batchId          String
+  logisticsId      String
   sequence         Int
   address          String
   modeOfTransport  String?
@@ -328,7 +297,6 @@ model Waypoint {
   status           WaypointStatus @default(PENDING)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-  shipment         Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
-
-  @@unique([shipmentId, sequence])
+  batch            Batch          @relation(fields: [batchId], references: [id])
+  logistics        Logistics      @relation(fields: [logisticsId], references: [id])
 }

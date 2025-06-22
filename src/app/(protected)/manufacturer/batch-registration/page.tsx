@@ -206,7 +206,8 @@ export default function BatchRegistrationPage() {
           batchData.productName &&
           batchData.quantity > 0 &&
           batchData.unit &&
-          batchData.qualityGrade
+          batchData.qualityGrade &&
+          batchData.destinationAddress // Add destination address as required
         );
       case 2:
         if (!enableMaterialRequests) return true;

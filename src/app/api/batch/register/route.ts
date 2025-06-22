@@ -53,22 +53,22 @@ export async function POST(request: NextRequest) {
       const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
       const batchNumber = `BT-${year}-${randomSuffix}-${timestamp.toString().slice(-4)}`;
 
-      // 1. Create the batch with generated batch number
+      // 1. Create the batch with all fields including destinationAddress
       const batch = await prisma.batch.create({
         data: {
-          batchNumber, // Use our generated batch number
+          batchNumber: batchNumber, // Use our generated batch number
           productName: batchData.productName,
           productCode: batchData.productCode || null,
           description: batchData.description || null,
           quantity: parseInt(batchData.quantity),
           unit: batchData.unit,
-          manufacturerId: manufacturerId,
-          status: 'CREATED',
           qualityGrade: batchData.qualityGrade || null,
           expiryDate: batchData.expiryDate ? new Date(batchData.expiryDate) : null,
-          destinationAddress: batchData.destinationAddress || null,
           storageTemp: batchData.storageTemp || null,
-          handlingNotes: batchData.handlingNotes || null
+          handlingNotes: batchData.handlingNotes || null,
+          destinationAddress: batchData.destinationAddress || null, // Add this field
+          status: 'CREATED',
+          manufacturerId: manufacturerId,
         }
       });
 

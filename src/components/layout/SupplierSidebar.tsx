@@ -43,7 +43,7 @@ export function SupplierSidebar({
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Image
                     src="/logo.png"
-                    alt="Yukti Logo"
+                    alt="Neev Logo"
                     width={60}
                     height={60}
                   />
@@ -70,63 +70,6 @@ export function SupplierSidebar({
                   <Link href="/applicant/dashboard">
                     <MdDashboard className="!size-5" />
                     <span>Dashboard</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/applicant/dashboard/jobs">
-                    <FaBriefcase className="!size-5" />
-                    <span>Bidding Area</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/applicant/dashboard/applied-jobs">
-                    <FaClipboardCheck className="!size-5" />
-                    <span></span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/applicant/dashboard/interview">
-                    <FaUserTie className="!size-5" />
-                    <span>Interviews</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/applicant/dashboard/resumes">
-                    <FileText className="!size-5" />
-                    <span>Resumes</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/applicant/dashboard/resume-analyser">
-                    <FaFileAlt className="!size-5" />
-                    <span>Resume Analyser</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

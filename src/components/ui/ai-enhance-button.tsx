@@ -9,7 +9,7 @@ interface AIEnhanceButtonProps {
   contextData: any;
   onEnhanced: (enhancedText: string) => void;
   disabled?: boolean;
-  size?: 'sm' | 'xs';
+  size?: 'sm' ;
 }
 
 export function AIEnhanceButton({ 
@@ -18,7 +18,7 @@ export function AIEnhanceButton({
   contextData, 
   onEnhanced, 
   disabled = false,
-  size = 'xs'
+  size = 'sm'
 }: AIEnhanceButtonProps) {
   const [isEnhancing, setIsEnhancing] = useState(false);
 
@@ -80,7 +80,7 @@ export function AIEnhanceButton({
         onClick={handleEnhance}
         disabled={disabled || isEnhancing}
         className={`
-          ${size === 'xs' ? 'h-6 w-6 p-0' : 'h-7 w-7 p-0'}
+          ${size === 'sm' ? 'h-6 w-6 p-0' : 'h-7 w-7 p-0'}
           text-purple-600 hover:text-purple-700 hover:bg-purple-50
           transition-all duration-300 ease-in-out
           hover:scale-110 hover:shadow-lg hover:shadow-purple-200/50
@@ -98,9 +98,9 @@ export function AIEnhanceButton({
         <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
         
         {isEnhancing ? (
-          <Loader2 className={`${size === 'xs' ? 'h-3 w-3' : 'h-4 w-4'} animate-spin text-purple-600`} />
+          <Loader2 className={`${size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} animate-spin text-purple-600`} />
         ) : (
-          <Sparkles className={`${size === 'xs' ? 'h-3 w-3' : 'h-4 w-4'} animate-pulse group-hover:animate-bounce transition-all duration-200`} />
+          <Sparkles className={`${size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} animate-pulse group-hover:animate-bounce transition-all duration-200`} />
         )}
       </Button>
       

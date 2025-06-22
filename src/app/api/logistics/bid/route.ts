@@ -139,6 +139,7 @@ export async function GET(request: NextRequest) {
     const logisticsId = searchParams.get('logisticsId');
     const batchId = searchParams.get('batchId');
     const availableOnly = searchParams.get('availableOnly') === 'true';
+    const status = searchParams.get('status'); // Add status filter
 
     let whereClause: any = {};
 
@@ -148,6 +149,11 @@ export async function GET(request: NextRequest) {
 
     if (batchId) {
       whereClause.batchId = batchId;
+    }
+
+    // Add status filter for accepted bids
+    if (status) {
+      whereClause.status = status.toUpperCase();
     }
 
     if (availableOnly) {

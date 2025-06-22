@@ -1,20 +1,31 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Package, 
-  MagnifyingGlass, 
-  PencilSimple, 
-  Trash, 
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import {
+  Package,
+  MagnifyingGlass,
+  PencilSimple,
+  Trash,
   Plus,
   ArrowsClockwise,
   CalendarBlank,
@@ -35,29 +46,51 @@ import {
   Circle,
   Scales,
   Medal,
-  Plant,
+  Leaf as PlantIcon,
   Spinner,
   FloppyDisk,
   Sparkle,
   Lightning,
-  Target
-} from '@phosphor-icons/react';
-import { useAppStore, type Batch, type BatchStatus } from '@/lib/store';
-import { format } from 'date-fns';
-import Link from 'next/link';
-import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+  Target,
+} from "@phosphor-icons/react";
+import { useAppStore, type Batch, type BatchStatus } from "@/lib/store";
+import { format } from "date-fns";
+import Link from "next/link";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import LogisticsBidding from "@/components/LogisticsBidding";
+import SupplierBidding from "@/components/SupplierBidding";
+import BatchTimeline from "@/components/BatchTimeline";
+import { QRCodeSVG } from "qrcode.react";
 
 const statusColors: Record<BatchStatus, string> = {
-  CREATED: 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-200 shadow-blue-100/50',
-  IN_PRODUCTION: 'bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 border-amber-200 shadow-amber-100/50',
-  QUALITY_CHECK: 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-purple-200 shadow-purple-100/50',
-  COMPLETED: 'bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-200 shadow-emerald-100/50',
-  SHIPPED: 'bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 border-indigo-200 shadow-indigo-100/50',
-  DELIVERED: 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200 shadow-green-100/50',
-  RECALLED: 'bg-gradient-to-r from-red-50 to-red-100 text-red-700 border-red-200 shadow-red-100/50',
+  CREATED:
+    "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-200 shadow-blue-100/50",
+  IN_PRODUCTION:
+    "bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 border-amber-200 shadow-amber-100/50",
+  QUALITY_CHECK:
+    "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-purple-200 shadow-purple-100/50",
+  COMPLETED:
+    "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-200 shadow-emerald-100/50",
+  SHIPPED:
+    "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 border-indigo-200 shadow-indigo-100/50",
+  DELIVERED:
+    "bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200 shadow-green-100/50",
+  RECALLED:
+    "bg-gradient-to-r from-red-50 to-red-100 text-red-700 border-red-200 shadow-red-100/50",
 };
 
 const statusIcons: Record<BatchStatus, React.ComponentType<any>> = {
@@ -75,50 +108,72 @@ interface BatchCardProps {
   onStatusUpdate: (id: string, status: BatchStatus) => void;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
+  onOpenLogisticsBidding: (batchId: string) => void;
+  onOpenSupplierBidding: (batchId: string) => void;
+  emissionsData: Record<string, { production: number; logistics: number; total: number }>;
+  hasMaterialRequests: boolean;
 }
 
-const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, onEdit }) => {
+const BatchCard: React.FC<BatchCardProps> = ({
+  batch,
+  onStatusUpdate,
+  onDelete,
+  onEdit,
+  onOpenLogisticsBidding,
+  onOpenSupplierBidding,
+  emissionsData,
+  hasMaterialRequests,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
+  const [showQrCode, setShowQrCode] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  
+
   const springConfig = { damping: 25, stiffness: 700 };
   const cardX = useSpring(0, springConfig);
   const cardY = useSpring(0, springConfig);
-  
+
   const StatusIcon = statusIcons[batch.status];
 
   const getStatusProgress = (status: BatchStatus) => {
-    const statusOrder = ['CREATED', 'IN_PRODUCTION', 'QUALITY_CHECK', 'COMPLETED', 'SHIPPED', 'DELIVERED'];
+    const statusOrder = [
+      "CREATED",
+      "IN_PRODUCTION",
+      "QUALITY_CHECK",
+      "COMPLETED",
+      "SHIPPED",
+      "DELIVERED",
+    ];
     return ((statusOrder.indexOf(status) + 1) / statusOrder.length) * 100;
   };
 
   const handleStatusChange = (newStatus: BatchStatus) => {
     onStatusUpdate(batch.id, newStatus);
     setShowStatusMenu(false);
-    toast.success(`Batch status updated to ${newStatus.replace('_', ' ')}`);
+    toast.success(`Batch status updated to ${newStatus.replace("_", " ")}`);
   };
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this batch?')) {
+    if (confirm("Are you sure you want to delete this batch?")) {
       onDelete(batch.id);
-      toast.success('Batch deleted successfully');
+      toast.success("Batch deleted successfully");
     }
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
-    
+
     const rect = cardRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    
+
     mouseX.set(e.clientX - rect.left);
     mouseY.set(e.clientY - rect.top);
-    
+
     cardX.set((e.clientX - centerX) / 25);
     cardY.set((e.clientY - centerY) / 25);
   };
@@ -139,10 +194,10 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, 
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
-      style={{ 
-        rotateX: cardY, 
+      style={{
+        rotateX: cardY,
         rotateY: cardX,
-        transformStyle: "preserve-3d"
+        transformStyle: "preserve-3d",
       }}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
@@ -151,43 +206,60 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, 
     >
       <Card className="group relative overflow-hidden border-0 shadow-md bg-white/95 backdrop-blur-sm hover:shadow-xl transition-all duration-200 hover:bg-white">
         {/* Lighter Cursor-Tracking Gradient */}
-        <motion.div 
+        <motion.div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
           style={{
-            background: `radial-gradient(600px circle at ${mouseX}px ${mouseY}px, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.02), transparent 50%)`
+            background: `radial-gradient(600px circle at ${mouseX}px ${mouseY}px, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.02), transparent 50%)`,
           }}
         />
-        
+
         {/* Subtle Static Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-50/30 via-white/20 to-blue-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-        
+
         <CardHeader className="relative pb-4 space-y-3">
           <div className="flex items-start justify-between">
             <div className="flex-1 space-y-3">
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-400/15 to-purple-500/15 blur-md rounded-full scale-125 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                  <QrCode size={20} className="relative text-slate-600" weight="duotone" />
+                  <QrCode
+                    size={20}
+                    className="relative text-slate-600"
+                    weight="duotone"
+                  />
                 </div>
-                <span className="font-mono text-sm font-semibold text-slate-800">{batch.batchNumber}</span>
+                <span className="font-mono text-sm font-semibold text-slate-800">
+                  {batch.batchNumber}
+                </span>
               </div>
-              
-              <h3 className="font-bold text-lg leading-tight text-slate-900 group-hover:text-blue-900 transition-colors duration-200">{batch.productName}</h3>
-              
+
+              <h3 className="font-bold text-lg leading-tight text-slate-900 group-hover:text-blue-900 transition-colors duration-200">
+                {batch.productName}
+              </h3>
+
               {batch.productCode && (
                 <p className="text-sm text-slate-500 flex items-center gap-2">
-                  <Target size={14} className="text-slate-400" weight="duotone" />
+                  <Target
+                    size={14}
+                    className="text-slate-400"
+                    weight="duotone"
+                  />
                   {batch.productCode}
                 </p>
               )}
             </div>
-            
+
             <div className="flex items-center gap-3">
-              <Badge className={`${statusColors[batch.status]} text-xs font-semibold shadow-sm`} variant="outline">
+              <Badge
+                className={`${
+                  statusColors[batch.status]
+                } text-xs font-semibold shadow-sm`}
+                variant="outline"
+              >
                 <StatusIcon size={14} className="mr-2" weight="duotone" />
-                {batch.status.replace('_', ' ')}
+                {batch.status.replace("_", " ")}
               </Badge>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -203,12 +275,12 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, 
               </Button>
             </div>
           </div>
-          
+
           <div className="space-y-3">
             <div className="relative">
-              <Progress 
-                value={getStatusProgress(batch.status)} 
-                className="h-2 bg-slate-100 rounded-full overflow-hidden" 
+              <Progress
+                value={getStatusProgress(batch.status)}
+                className="h-2 bg-slate-100 rounded-full overflow-hidden"
               />
               <motion.div
                 className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full"
@@ -219,7 +291,11 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, 
             </div>
             <div className="flex justify-between text-xs text-slate-600">
               <span className="flex items-center gap-1">
-                <Lightning size={12} className="text-blue-500" weight="duotone" />
+                <Lightning
+                  size={12}
+                  className="text-blue-500"
+                  weight="duotone"
+                />
                 Progress
               </span>
               <span className="font-semibold">
@@ -233,11 +309,31 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, 
           {/* Optimized Key Metrics */}
           <div className="grid grid-cols-3 gap-4">
             {[
-              { icon: Scales, value: batch.quantity, unit: batch.unit, color: 'blue' },
-              { icon: Medal, value: batch.qualityGrade || 'N/A', unit: 'Grade', color: 'amber' },
-              { icon: Plant, value: batch.carbonFootprint?.toFixed(1) || '0', unit: 'CO₂ kg', color: 'green' }
+              {
+                icon: Scales,
+                value: batch.quantity,
+                unit: batch.unit,
+                color: "blue",
+              },
+              {
+                icon: Medal,
+                value: batch.qualityGrade || "N/A",
+                unit: "Grade",
+                color: "amber",
+              },
+              {
+                icon: PlantIcon,
+                value: emissionsData[batch.id]?.hasLogisticsBid && emissionsData[batch.id]?.total > 0
+                  ? emissionsData[batch.id].total.toFixed(1)
+                  : "N/A",
+                unit: emissionsData[batch.id]?.hasLogisticsBid && emissionsData[batch.id]?.total > 0 ? "CO₂ kg" : "",
+                color: "green",
+                subtitle: emissionsData[batch.id]?.hasLogisticsBid && emissionsData[batch.id]?.total > 0 
+                  ? "Logistics" 
+                  : "No logistics selected",
+              },
             ].map((metric, index) => (
-              <motion.div 
+              <motion.div
                 key={index}
                 className={`text-center p-4 bg-gradient-to-br from-${metric.color}-50/50 to-${metric.color}-100/50 rounded-xl border border-${metric.color}-200/30 hover:shadow-md transition-all duration-200 group/metric`}
                 whileHover={{ scale: 1.02, y: -1 }}
@@ -245,32 +341,107 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, 
               >
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <div className="relative">
-                    <div className={`absolute inset-0 bg-${metric.color}-400/10 blur-md rounded-full scale-125`} />
-                    <metric.icon size={18} className={`relative text-${metric.color}-600`} weight="duotone" />
+                    <div
+                      className={`absolute inset-0 bg-${metric.color}-400/10 blur-md rounded-full scale-125`}
+                    />
+                    <metric.icon
+                      size={18}
+                      className={`relative text-${metric.color}-600`}
+                      weight="duotone"
+                    />
                   </div>
-                  <div className={`text-xl font-bold text-slate-900 group-hover/metric:text-${metric.color}-900 transition-colors duration-200`}>{metric.value}</div>
+                  <div
+                    className={`text-xl font-bold text-slate-900 group-hover/metric:text-${metric.color}-900 transition-colors duration-200`}
+                  >
+                    {metric.value}
+                  </div>
                 </div>
-                <div className="text-xs text-slate-500 font-medium">{metric.unit}</div>
+                <div className="text-xs text-slate-500 font-medium">
+                  {metric.unit}
+                </div>
+                {metric.subtitle && (
+                  <div className="text-xs text-slate-400 mt-1">
+                    {metric.subtitle}
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
 
           {/* Optimized Action Buttons */}
           <div className="flex gap-2">
+            {batch.status === "SHIPPED" || batch.status === "IN_TRANSIT" || batch.status === "DELIVERED" ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowTimeline(true)}
+                className="flex-1 text-xs border-slate-200 hover:bg-green-50 hover:border-green-300 transition-all duration-200"
+              >
+                <MapPin size={14} className="mr-2" weight="duotone" />
+                Timeline
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowStatusMenu(!showStatusMenu)}
+                className="flex-1 text-xs border-slate-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
+              >
+                <Gear size={14} className="mr-2" weight="duotone" />
+                Status
+              </Button>
+            )}
+
+            {/* QR Code Button */}
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowStatusMenu(!showStatusMenu)}
-              className="flex-1 text-xs border-slate-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
+              onClick={() => setShowQrCode(true)}
+              className="text-xs border-slate-200 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
             >
-              <Gear size={14} className="mr-2" weight="duotone" />
-              Status
+              <QrCode size={14} weight="duotone" />
             </Button>
-            
+
+            {/* Biddings Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-slate-200 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
+                >
+                  <Target size={14} className="mr-2" weight="duotone" />
+                  Biddings
+                  <CaretDown size={12} className="ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48">
+                <DropdownMenuItem
+                  onClick={() => onOpenLogisticsBidding(batch.id)}
+                  className="cursor-pointer"
+                >
+                  <Truck size={14} className="mr-2" weight="duotone" />
+                  Logistics
+                </DropdownMenuItem>
+                {hasMaterialRequests && (
+                  <DropdownMenuItem
+                    onClick={() => onOpenSupplierBidding(batch.id)}
+                    className="cursor-pointer"
+                  >
+                    <Package size={14} className="mr-2" weight="duotone" />
+                    Supplier
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {[
-              { icon: PencilSimple, action: () => onEdit(batch.id), color: 'blue' },
-              { icon: DownloadSimple, action: () => {}, color: 'green' },
-              { icon: Trash, action: handleDelete, color: 'red' }
+              {
+                icon: PencilSimple,
+                action: () => onEdit(batch.id),
+                color: "blue",
+              },
+              { icon: Trash, action: handleDelete, color: "red" },
             ].map((btn, index) => (
               <motion.div
                 key={index}
@@ -278,9 +449,9 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, 
                 whileTap={{ scale: 0.95 }}
                 transition={{ duration: 0.1 }}
               >
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={btn.action}
                   className={`border-slate-200 hover:border-${btn.color}-300 hover:bg-${btn.color}-50 hover:text-${btn.color}-600 transition-all duration-200`}
                 >
@@ -295,7 +466,7 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, 
             {showStatusMenu && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
@@ -311,13 +482,21 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, 
                         transition={{ delay: index * 0.02, duration: 0.15 }}
                       >
                         <Button
-                          variant={batch.status === status ? "default" : "ghost"}
+                          variant={
+                            batch.status === status ? "default" : "ghost"
+                          }
                           size="sm"
-                          onClick={() => handleStatusChange(status as BatchStatus)}
+                          onClick={() =>
+                            handleStatusChange(status as BatchStatus)
+                          }
                           className="w-full justify-start text-xs h-10 transition-all duration-200"
                         >
-                          <StatusIcon size={14} className="mr-2" weight="duotone" />
-                          {status.replace('_', ' ')}
+                          <StatusIcon
+                            size={14}
+                            className="mr-2"
+                            weight="duotone"
+                          />
+                          {status.replace("_", " ")}
                         </Button>
                       </motion.div>
                     );
@@ -332,23 +511,23 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, 
             {isExpanded && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.25 }}
                 className="overflow-hidden"
               >
                 <Separator className="mb-6 bg-slate-200" />
-                
+
                 <Tabs defaultValue="details" className="w-full">
                   <TabsList className="grid w-full grid-cols-3 mb-6 h-10 bg-slate-100/50 rounded-xl p-1">
                     {[
                       { value: "details", label: "Details", icon: File },
                       { value: "docs", label: "Documents", icon: File },
-                      { value: "tracking", label: "Tracking", icon: MapPin }
+                      { value: "tracking", label: "Tracking", icon: MapPin },
                     ].map((tab) => (
-                      <TabsTrigger 
+                      <TabsTrigger
                         key={tab.value}
-                        value={tab.value} 
+                        value={tab.value}
                         className="text-xs h-8 data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200 flex items-center gap-2"
                       >
                         <tab.icon size={12} weight="duotone" />
@@ -360,145 +539,308 @@ const BatchCard: React.FC<BatchCardProps> = ({ batch, onStatusUpdate, onDelete, 
                   <TabsContent value="details" className="space-y-6 mt-6">
                     <div className="grid grid-cols-2 gap-6 text-sm">
                       {[
-                        { 
-                          icon: CalendarBlank, 
-                          label: 'Manufactured', 
-                          value: format(new Date(batch.manufacturedAt), 'MMM dd, yyyy'),
-                          color: 'blue'
+                        {
+                          icon: CalendarBlank,
+                          label: "Manufactured",
+                          value: format(
+                            new Date(batch.manufacturedAt),
+                            "MMM dd, yyyy"
+                          ),
+                          color: "blue",
                         },
-                        batch.expiryDate && { 
-                          icon: CalendarBlank, 
-                          label: 'Expires', 
-                          value: format(new Date(batch.expiryDate), 'MMM dd, yyyy'),
-                          color: 'amber'
-                        },
-                        batch.storageTemp && { 
-                          icon: ThermometerSimple, 
-                          label: 'Storage', 
-                          value: batch.storageTemp,
-                          color: 'green'
-                        }
-                      ].filter(Boolean).map((item, index) => (
-                        <div 
-                          key={index}
-                          className="space-y-2 p-3 bg-white/70 rounded-lg border border-slate-100 hover:shadow-sm transition-all duration-200"
-                        >
-                          <span className="text-slate-500 text-xs flex items-center gap-2 font-medium">
-                            <item.icon size={14} className={`text-${item.color}-500`} weight="duotone" />
-                            {item.label}
-                          </span>
-                          <p className="font-semibold text-slate-900">{item.value}</p>
-                        </div>
-                      ))}
+                      ]
+                        .filter(Boolean)
+                        .map((item, index) => (
+                          <div
+                            key={index}
+                            className="space-y-2 p-3 bg-white/70 rounded-lg border border-slate-100 hover:shadow-sm transition-all duration-200"
+                          >
+                            <span className="text-slate-500 text-xs flex items-center gap-2 font-medium">
+                              <item.icon
+                                size={14}
+                                className={`text-${item?.color}-500`}
+                                weight="duotone"
+                              />
+                              {item?.label}
+                            </span>
+                            <p className="font-semibold text-slate-900">
+                              {item?.value}
+                            </p>
+                          </div>
+                        ))}
                     </div>
-                    
+
                     {batch.destinationAddress && (
-                      <motion.div 
+                      <motion.div
                         className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100"
                         whileHover={{ scale: 1.01 }}
                       >
                         <span className="text-slate-500 text-xs flex items-center gap-2 mb-2 font-medium">
                           <div className="relative">
                             <div className="absolute inset-0 bg-blue-400/20 blur-lg rounded-full scale-150" />
-                            <MapPin size={14} className="relative text-blue-600" weight="duotone" />
+                            <MapPin
+                              size={14}
+                              className="relative text-blue-600"
+                              weight="duotone"
+                            />
                           </div>
                           Destination
                         </span>
-                        <p className="font-semibold text-slate-900 text-sm">{batch.destinationAddress}</p>
+                        <p className="font-semibold text-slate-900 text-sm">
+                          {batch.destinationAddress}
+                        </p>
                       </motion.div>
                     )}
-                    
+
                     {/* Enhanced Description and Notes */}
                     {[
-                      { key: 'description', label: 'Description', content: batch.description },
-                      { key: 'handlingNotes', label: 'Handling Notes', content: batch.handlingNotes }
-                    ].filter(item => item.content).map((item, index) => (
-                      <motion.div 
-                        key={item.key}
-                        className="space-y-2 p-4 bg-white/70 rounded-xl border border-slate-100 hover:shadow-sm transition-all duration-200"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <span className="text-slate-500 text-xs font-medium flex items-center gap-2">
-                          <Sparkle size={12} className="text-slate-400" weight="duotone" />
-                          {item.label}
-                        </span>
-                        <p className="text-sm text-slate-700 leading-relaxed">{item.content}</p>
-                      </motion.div>
-                    ))}
+                      {
+                        key: "description",
+                        label: "Description",
+                        content: batch.description,
+                      },
+                      {
+                        key: "handlingNotes",
+                        label: "Handling Notes",
+                        content: batch.handlingNotes,
+                      },
+                    ]
+                      .filter((item) => item.content)
+                      .map((item, index) => (
+                        <motion.div
+                          key={item.key}
+                          className="space-y-2 p-4 bg-white/70 rounded-xl border border-slate-100 hover:shadow-sm transition-all duration-200"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <span className="text-slate-500 text-xs font-medium flex items-center gap-2">
+                            <Sparkle
+                              size={12}
+                              className="text-slate-400"
+                              weight="duotone"
+                            />
+                            {item.label}
+                          </span>
+                          <p className="text-sm text-slate-700 leading-relaxed">
+                            {item.content}
+                          </p>
+                        </motion.div>
+                      ))}
                   </TabsContent>
 
-                  {/* Enhanced other tabs content... */}
-                  {/* ...existing code for docs and tracking tabs... */}
+                  <TabsContent value="docs" className="space-y-4 mt-6">
+                    {batch.complianceDocuments &&
+                    batch.complianceDocuments.length > 0 ? (
+                      <div className="space-y-3">
+                        {batch.complianceDocuments.map((doc, index) => (
+                          <motion.div
+                            key={doc.id || index}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="flex items-center justify-between p-4 bg-white/70 rounded-xl border border-slate-100 hover:shadow-sm transition-all duration-200"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-blue-100 rounded-lg">
+                                <File
+                                  size={16}
+                                  className="text-blue-600"
+                                  weight="duotone"
+                                />
+                              </div>
+                              <div>
+                                <p className="font-medium text-slate-900">
+                                  {doc.type}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  Uploaded{" "}
+                                  {format(
+                                    new Date(doc.uploadedAt),
+                                    "MMM dd, yyyy"
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className={`text-xs ${
+                                  doc.status === "APPROVED"
+                                    ? "bg-green-50 text-green-700 border-green-200"
+                                    : doc.status === "PENDING"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                    : "bg-red-50 text-red-700 border-red-200"
+                                }`}
+                              >
+                                {doc.status}
+                              </Badge>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <File
+                          size={32}
+                          className="text-slate-300 mx-auto mb-3"
+                          weight="duotone"
+                        />
+                        <p className="text-slate-500 text-sm">
+                          No documents uploaded
+                        </p>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="tracking" className="space-y-4 mt-6">
+                    <div className="text-center py-8">
+                      <MapPin
+                        size={32}
+                        className="text-slate-300 mx-auto mb-3"
+                        weight="duotone"
+                      />
+                      <p className="text-slate-500 text-sm">
+                        Tracking information will appear here
+                      </p>
+                    </div>
+                  </TabsContent>
                 </Tabs>
               </motion.div>
             )}
           </AnimatePresence>
         </CardContent>
       </Card>
+
+      {/* Timeline Modal */}
+      <BatchTimeline
+        isOpen={showTimeline}
+        onClose={() => setShowTimeline(false)}
+        batchId={batch.id}
+        batchNumber={batch.batchNumber}
+      />
+
+      {/* QR Code Modal */}
+      <Dialog open={showQrCode} onOpenChange={setShowQrCode}>
+        <DialogContent className="max-w-sm p-6 mx-auto rounded-lg shadow-lg bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-slate-900">
+              QR Code - {batch.batchNumber}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex justify-center mb-4">
+            <QRCodeSVG
+              value={`https://yourdomain.com/batch/${batch.id}`}
+              size={128}
+              className="rounded-lg shadow-md"
+            />
+          </div>
+
+          <div className="text-center">
+            <p className="text-sm text-slate-500 mb-4">
+              Scan the QR code to view batch details
+            </p>
+            <Button
+              onClick={() => setShowQrCode(false)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };
 
 export default function BatchManagementPage() {
   const { batches, removeBatch, updateBatch, setBatches } = useAppStore();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'date' | 'status' | 'name'>('date');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"date" | "status" | "name">("date");
   const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLogisticsBidding, setShowLogisticsBidding] = useState(false);
+  const [showSupplierBidding, setShowSupplierBidding] = useState(false);
+  const [selectedBatchForBidding, setSelectedBatchForBidding] = useState<
+    string | null
+  >(null);
+  const [emissionsData, setEmissionsData] = useState<
+    Record<string, { production: number; logistics: number; total: number }>
+  >({});
+  const [showTimeline, setShowTimeline] = useState(false);
 
   // Load batches from database on component mount
   useEffect(() => {
     const loadBatches = async () => {
       try {
-        const response = await fetch('/api/batch');
+        const response = await fetch("/api/batch");
         if (response.ok) {
           const data = await response.json();
           // Transform database batches to match frontend format
           const transformedBatches = data.batches.map((batch: any) => ({
             ...batch,
             manufacturedAt: new Date(batch.manufacturedAt),
-            expiryDate: batch.expiryDate ? new Date(batch.expiryDate) : undefined,
+            expiryDate: batch.expiryDate
+              ? new Date(batch.expiryDate)
+              : undefined,
             complianceDocuments: batch.complianceDocuments || [],
           }));
           setBatches(transformedBatches);
         }
       } catch (error) {
-        console.error('Error loading batches:', error);
-        toast.error('Failed to load batches');
+        console.error("Error loading batches:", error);
+        toast.error("Failed to load batches");
       } finally {
         setIsLoading(false);
       }
     };
 
+    const loadEmissionsData = async () => {
+      try {
+        const response = await fetch("/api/batch/emissions");
+        if (response.ok) {
+          const data = await response.json();
+          setEmissionsData(data.emissions || {});
+        }
+      } catch (error) {
+        console.error("Error loading emissions data:", error);
+      }
+    };
+
     loadBatches();
+    loadEmissionsData();
   }, [setBatches]);
 
   // Filter and sort batches
   const filteredAndSortedBatches = useMemo(() => {
     let filtered = batches.filter((batch: Batch) => {
-      const matchesSearch = 
+      const matchesSearch =
         batch.batchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         batch.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (batch.productCode && batch.productCode.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesStatus = statusFilter === 'all' || batch.status === statusFilter;
-      
+        (batch.productCode &&
+          batch.productCode.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchesStatus =
+        statusFilter === "all" || batch.status === statusFilter;
+
       return matchesSearch && matchesStatus;
     });
 
     // Sort batches
     filtered.sort((a: Batch, b: Batch) => {
       switch (sortBy) {
-        case 'date':
-          return new Date(b.manufacturedAt).getTime() - new Date(a.manufacturedAt).getTime();
-        case 'status':
+        case "date":
+          return (
+            new Date(b.manufacturedAt).getTime() -
+            new Date(a.manufacturedAt).getTime()
+          );
+        case "status":
           return a.status.localeCompare(b.status);
-        case 'name':
+        case "name":
           return a.productName.localeCompare(b.productName);
         default:
           return 0;
@@ -509,89 +851,102 @@ export default function BatchManagementPage() {
   }, [batches, searchTerm, statusFilter, sortBy]);
 
   // Database integration functions
-  const handleStatusUpdate = async (batchId: string, newStatus: BatchStatus) => {
+  const handleStatusUpdate = async (
+    batchId: string,
+    newStatus: BatchStatus
+  ) => {
     setIsUpdating(true);
     try {
       const response = await fetch(`/api/batch/${batchId}/status`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ status: newStatus }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update batch status');
+        throw new Error("Failed to update batch status");
       }
 
       // Update local store
       updateBatch(batchId, { status: newStatus });
-      toast.success(`Batch status updated to ${newStatus.replace('_', ' ')}`);
+      toast.success(`Batch status updated to ${newStatus.replace("_", " ")}`);
     } catch (error) {
-      console.error('Error updating batch status:', error);
-      toast.error('Failed to update batch status');
+      console.error("Error updating batch status:", error);
+      toast.error("Failed to update batch status");
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleDelete = async (batchId: string) => {
-    if (!confirm('Are you sure you want to delete this batch?')) return;
-    
+    if (!confirm("Are you sure you want to delete this batch?")) return;
+
     setIsUpdating(true);
     try {
       const response = await fetch(`/api/batch/${batchId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete batch');
+        throw new Error("Failed to delete batch");
       }
 
       // Remove from local store
       removeBatch(batchId);
-      toast.success('Batch deleted successfully');
+      toast.success("Batch deleted successfully");
     } catch (error) {
-      console.error('Error deleting batch:', error);
-      toast.error('Failed to delete batch');
+      console.error("Error deleting batch:", error);
+      toast.error("Failed to delete batch");
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleEdit = (batchId: string) => {
-    const batch = batches.find(b => b.id === batchId);
+    const batch = batches.find((b) => b.id === batchId);
     if (batch) {
       setEditingBatch(batch);
       setIsEditModalOpen(true);
     }
   };
 
+  const handleOpenLogisticsBidding = (batchId: string) => {
+    setSelectedBatchForBidding(batchId);
+    setShowLogisticsBidding(true);
+  };
+
+  const handleOpenSupplierBidding = (batchId: string) => {
+    setSelectedBatchForBidding(batchId);
+    setShowSupplierBidding(true);
+  };
+
   const handleEditSave = async (updatedBatch: Partial<Batch>) => {
     if (!editingBatch) return;
-    
+
     setIsUpdating(true);
     try {
       const response = await fetch(`/api/batch/${editingBatch.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updatedBatch),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update batch');
+        throw new Error("Failed to update batch");
       }
 
       // Update local store
       updateBatch(editingBatch.id, updatedBatch);
       setIsEditModalOpen(false);
       setEditingBatch(null);
-      toast.success('Batch updated successfully');
+      toast.success("Batch updated successfully");
     } catch (error) {
-      console.error('Error updating batch:', error);
-      toast.error('Failed to update batch');
+      console.error("Error updating batch:", error);
+      toast.error("Failed to update batch");
     } finally {
       setIsUpdating(false);
     }
@@ -600,13 +955,35 @@ export default function BatchManagementPage() {
   // Statistics
   const stats = useMemo(() => {
     const total = batches.length;
-    const completed = batches.filter((b: Batch) => b.status === 'COMPLETED').length;
-    const inProduction = batches.filter((b: Batch) => b.status === 'IN_PRODUCTION').length;
-    const shipped = batches.filter((b: Batch) => b.status === 'SHIPPED').length;
-    const totalCarbonFootprint = batches.reduce((sum: number, b: Batch) => sum + (b.carbonFootprint || 0), 0);
-    
-    return { total, completed, inProduction, shipped, totalCarbonFootprint };
-  }, [batches]);
+    const completed = batches.filter(
+      (b: Batch) => b.status === "COMPLETED"
+    ).length;
+    const inProduction = batches.filter(
+      (b: Batch) => b.status === "IN_PRODUCTION"
+    ).length;
+    const shipped = batches.filter((b: Batch) => b.status === "SHIPPED").length;
+    const totalCarbonFootprint = batches.reduce(
+      (sum: number, b: Batch) => sum + (b.carbonFootprint || 0),
+      0
+    );
+    const totalLogisticsEmissions = Object.values(emissionsData).reduce(
+      (sum: number, emission: any) => sum + emission.logistics,
+      0
+    );
+    const combinedEmissions = totalCarbonFootprint + totalLogisticsEmissions;
+    const withLogistics = batches.filter(
+      (b: Batch) => b.selectedLogisticsBidId
+    ).length;
+
+    return {
+      total,
+      completed,
+      inProduction,
+      shipped,
+      combinedEmissions,
+      withLogistics,
+    };
+  }, [batches, emissionsData]);
 
   if (isLoading) {
     return (
@@ -626,10 +1003,10 @@ export default function BatchManagementPage() {
         <div className="absolute -top-4 -right-4 w-96 h-96 bg-gradient-to-br from-blue-400/5 to-purple-400/5 rounded-full blur-3xl" />
         <div className="absolute -bottom-4 -left-4 w-96 h-96 bg-gradient-to-tr from-indigo-400/5 to-pink-400/5 rounded-full blur-3xl" />
       </div>
-      
+
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Optimized Header */}
-        <motion.div 
+        <motion.div
           className="flex items-center justify-between mb-12"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -644,7 +1021,7 @@ export default function BatchManagementPage() {
               Manage your production batches efficiently
             </p>
           </div>
-          
+
           <motion.div
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -660,18 +1037,44 @@ export default function BatchManagementPage() {
         </motion.div>
 
         {/* Optimized Stats Cards */}
-        <motion.div 
+        <motion.div
           className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-12"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
           {[
-            { icon: Package, label: 'Total', value: stats.total, color: 'blue' },
-            { icon: CheckCircle, label: 'Completed', value: stats.completed, color: 'emerald' },
-            { icon: ArrowsClockwise, label: 'In Production', value: stats.inProduction, color: 'amber' },
-            { icon: Truck, label: 'Shipped', value: stats.shipped, color: 'indigo' },
-            { icon: Leaf, label: 'CO₂ kg', value: stats.totalCarbonFootprint.toFixed(1), color: 'green' }
+            {
+              icon: Package,
+              label: "Total",
+              value: stats.total,
+              color: "blue",
+            },
+            {
+              icon: CheckCircle,
+              label: "Completed",
+              value: stats.completed,
+              color: "emerald",
+            },
+            {
+              icon: ArrowsClockwise,
+              label: "In Production",
+              value: stats.inProduction,
+              color: "amber",
+            },
+            {
+              icon: Truck,
+              label: "Shipped",
+              value: stats.shipped,
+              color: "indigo",
+            },
+            {
+              icon: Leaf,
+              label: "CO₂ kg",
+              value: stats.combinedEmissions.toFixed(1),
+              color: "green",
+              
+            },
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -682,12 +1085,25 @@ export default function BatchManagementPage() {
             >
               <Card className="p-6 border-0 shadow-md bg-white/95 backdrop-blur-sm hover:shadow-lg transition-all duration-200 group">
                 <div className="flex items-center gap-4">
-                  <div className={`p-3 bg-gradient-to-br from-${stat.color}-100/70 to-${stat.color}-200/70 rounded-2xl group-hover:scale-105 transition-transform duration-200`}>
-                    <stat.icon size={24} className={`text-${stat.color}-600`} weight="duotone" />
+                  <div
+                    className={`p-3 bg-gradient-to-br from-${stat.color}-100/70 to-${stat.color}-200/70 rounded-2xl group-hover:scale-105 transition-transform duration-200`}
+                  >
+                    <stat.icon
+                      size={24}
+                      className={`text-${stat.color}-600`}
+                      weight="duotone"
+                    />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                    <p className="text-sm text-slate-500 font-medium">{stat.label}</p>
+                    <p className="text-2xl font-bold text-slate-900">
+                      {typeof stat.value === "string" ? stat.value : stat.value}
+                    </p>
+                    <p className="text-sm text-slate-500 font-medium">
+                      {stat.label}
+                    </p>
+                    {stat.subtitle && (
+                      <p className="text-xs text-slate-400">{stat.subtitle}</p>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -705,7 +1121,11 @@ export default function BatchManagementPage() {
             <div className="flex flex-col md:flex-row gap-6">
               <div className="flex-1">
                 <div className="relative group">
-                  <MagnifyingGlass size={18} className="absolute left-4 top-3.5 text-slate-400 group-hover:text-blue-500 transition-colors duration-200" weight="duotone" />
+                  <MagnifyingGlass
+                    size={18}
+                    className="absolute left-4 top-3.5 text-slate-400 group-hover:text-blue-500 transition-colors duration-200"
+                    weight="duotone"
+                  />
                   <Input
                     placeholder="Search batches..."
                     value={searchTerm}
@@ -714,34 +1134,45 @@ export default function BatchManagementPage() {
                   />
                 </div>
               </div>
-              
+
               {[
-                { value: statusFilter, onChange: setStatusFilter, placeholder: "Filter by status", options: [
-                  { value: "all", label: "All Statuses" },
-                  { value: "CREATED", label: "Created" },
-                  { value: "IN_PRODUCTION", label: "In Production" },
-                  { value: "QUALITY_CHECK", label: "Quality Check" },
-                  { value: "COMPLETED", label: "Completed" },
-                  { value: "SHIPPED", label: "Shipped" },
-                  { value: "DELIVERED", label: "Delivered" }
-                ]},
-                { value: sortBy, onChange: setSortBy, placeholder: "Sort by", options: [
-                  { value: "date", label: "Sort by Date" },
-                  { value: "status", label: "Sort by Status" },
-                  { value: "name", label: "Sort by Name" }
-                ]}
+                {
+                  value: statusFilter,
+                  onChange: setStatusFilter,
+                  placeholder: "Filter by status",
+                  options: [
+                    { value: "all", label: "All Statuses" },
+                    { value: "CREATED", label: "Created" },
+                    { value: "IN_PRODUCTION", label: "In Production" },
+                    { value: "QUALITY_CHECK", label: "Quality Check" },
+                    { value: "COMPLETED", label: "Completed" },
+                    { value: "SHIPPED", label: "Shipped" },
+                    { value: "DELIVERED", label: "Delivered" },
+                  ],
+                },
+                {
+                  value: sortBy,
+                  onChange: setSortBy,
+                  placeholder: "Sort by",
+                  options: [
+                    { value: "date", label: "Sort by Date" },
+                    { value: "status", label: "Sort by Status" },
+                    { value: "name", label: "Sort by Name" },
+                  ],
+                },
               ].map((select, index) => (
-                <motion.div
-                  key={index}
-                  whileHover={{ scale: 1.02 }}
-                >
+                <motion.div key={index} whileHover={{ scale: 1.02 }}>
                   <Select value={select.value} onValueChange={select.onChange}>
                     <SelectTrigger className="w-full md:w-56 border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-100 rounded-xl bg-white/70 backdrop-blur-sm transition-all duration-200 hover:shadow-md">
                       <SelectValue placeholder={select.placeholder} />
                     </SelectTrigger>
                     <SelectContent className="border-slate-200 shadow-2xl bg-white/95 backdrop-blur-xl rounded-xl">
                       {select.options.map((option) => (
-                        <SelectItem key={option.value} value={option.value} className="hover:bg-blue-50 transition-colors duration-200">
+                        <SelectItem
+                          key={option.value}
+                          value={option.value}
+                          className="hover:bg-blue-50 transition-colors duration-200"
+                        >
                           {option.label}
                         </SelectItem>
                       ))}
@@ -757,7 +1188,7 @@ export default function BatchManagementPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           <AnimatePresence mode="popLayout">
             {filteredAndSortedBatches.length === 0 ? (
-              <motion.div 
+              <motion.div
                 className="col-span-full flex flex-col items-center justify-center py-24 text-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -766,11 +1197,19 @@ export default function BatchManagementPage() {
               >
                 <div className="relative mb-6">
                   <div className="p-6 bg-slate-100 rounded-full">
-                    <Package size={48} className="text-slate-400" weight="duotone" />
+                    <Package
+                      size={48}
+                      className="text-slate-400"
+                      weight="duotone"
+                    />
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold text-slate-700 mb-2">No batches found</h3>
-                <p className="text-slate-500">Try adjusting your search or filters</p>
+                <h3 className="text-xl font-semibold text-slate-700 mb-2">
+                  No batches found
+                </h3>
+                <p className="text-slate-500">
+                  Try adjusting your search or filters
+                </p>
               </motion.div>
             ) : (
               filteredAndSortedBatches.map((batch, index) => (
@@ -780,6 +1219,10 @@ export default function BatchManagementPage() {
                   onStatusUpdate={handleStatusUpdate}
                   onDelete={handleDelete}
                   onEdit={handleEdit}
+                  onOpenLogisticsBidding={handleOpenLogisticsBidding}
+                  onOpenSupplierBidding={handleOpenSupplierBidding}
+                  emissionsData={emissionsData}
+                  hasMaterialRequests={!!batch.materialRequests?.length}
                 />
               ))
             )}
@@ -788,7 +1231,7 @@ export default function BatchManagementPage() {
 
         {/* Enhanced Results Summary */}
         {filteredAndSortedBatches.length > 0 && (
-          <motion.div 
+          <motion.div
             className="mt-12 text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -797,7 +1240,11 @@ export default function BatchManagementPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-slate-200">
               <Target size={14} className="text-blue-500" weight="duotone" />
               <p className="text-sm text-slate-600 font-medium">
-                Showing <span className="font-bold text-blue-600">{filteredAndSortedBatches.length}</span> of <span className="font-bold">{batches.length}</span> batches
+                Showing{" "}
+                <span className="font-bold text-blue-600">
+                  {filteredAndSortedBatches.length}
+                </span>{" "}
+                of <span className="font-bold">{batches.length}</span> batches
               </p>
             </div>
           </motion.div>
@@ -815,58 +1262,115 @@ export default function BatchManagementPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="productName" className="text-sm font-medium text-slate-700">Product Name</Label>
+                  <Label
+                    htmlFor="productName"
+                    className="text-sm font-medium text-slate-700"
+                  >
+                    Product Name
+                  </Label>
                   <Input
                     id="productName"
                     value={editingBatch?.productName}
-                    onChange={(e) => setEditingBatch({ ...editingBatch, productName: e.target.value })}
+                    onChange={(e) =>
+                      setEditingBatch({
+                        ...editingBatch,
+                        productName: e.target.value,
+                      })
+                    }
                     className="mt-1 border-slate-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="batchNumber" className="text-sm font-medium text-slate-700">Batch Number</Label>
+                  <Label
+                    htmlFor="batchNumber"
+                    className="text-sm font-medium text-slate-700"
+                  >
+                    Batch Number
+                  </Label>
                   <Input
                     id="batchNumber"
                     value={editingBatch?.batchNumber}
-                    onChange={(e) => setEditingBatch({ ...editingBatch, batchNumber: e.target.value })}
+                    onChange={(e) =>
+                      setEditingBatch({
+                        ...editingBatch,
+                        batchNumber: e.target.value,
+                      })
+                    }
                     className="mt-1 border-slate-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
                     readOnly
                   />
                 </div>
                 <div>
-                  <Label htmlFor="productCode" className="text-sm font-medium text-slate-700">Product Code</Label>
+                  <Label
+                    htmlFor="productCode"
+                    className="text-sm font-medium text-slate-700"
+                  >
+                    Product Code
+                  </Label>
                   <Input
                     id="productCode"
                     value={editingBatch?.productCode}
-                    onChange={(e) => setEditingBatch({ ...editingBatch, productCode: e.target.value })}
+                    onChange={(e) =>
+                      setEditingBatch({
+                        ...editingBatch,
+                        productCode: e.target.value,
+                      })
+                    }
                     className="mt-1 border-slate-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="quantity" className="text-sm font-medium text-slate-700">Quantity</Label>
+                  <Label
+                    htmlFor="quantity"
+                    className="text-sm font-medium text-slate-700"
+                  >
+                    Quantity
+                  </Label>
                   <Input
                     id="quantity"
                     type="number"
                     value={editingBatch?.quantity}
-                    onChange={(e) => setEditingBatch({ ...editingBatch, quantity: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setEditingBatch({
+                        ...editingBatch,
+                        quantity: Number(e.target.value),
+                      })
+                    }
                     className="mt-1 border-slate-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="unit" className="text-sm font-medium text-slate-700">Unit</Label>
+                  <Label
+                    htmlFor="unit"
+                    className="text-sm font-medium text-slate-700"
+                  >
+                    Unit
+                  </Label>
                   <Input
                     id="unit"
                     value={editingBatch?.unit}
-                    onChange={(e) => setEditingBatch({ ...editingBatch, unit: e.target.value })}
+                    onChange={(e) =>
+                      setEditingBatch({ ...editingBatch, unit: e.target.value })
+                    }
                     className="mt-1 border-slate-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="status" className="text-sm font-medium text-slate-700">Status</Label>
+                  <Label
+                    htmlFor="status"
+                    className="text-sm font-medium text-slate-700"
+                  >
+                    Status
+                  </Label>
                   <Select
                     id="status"
                     value={editingBatch?.status}
-                    onValueChange={(value) => setEditingBatch({ ...editingBatch, status: value as BatchStatus })}
+                    onValueChange={(value) =>
+                      setEditingBatch({
+                        ...editingBatch,
+                        status: value as BatchStatus,
+                      })
+                    }
                     className="mt-1 border-slate-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
                   >
                     <SelectTrigger>
@@ -874,8 +1378,12 @@ export default function BatchManagementPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="CREATED">Created</SelectItem>
-                      <SelectItem value="IN_PRODUCTION">In Production</SelectItem>
-                      <SelectItem value="QUALITY_CHECK">Quality Check</SelectItem>
+                      <SelectItem value="IN_PRODUCTION">
+                        In Production
+                      </SelectItem>
+                      <SelectItem value="QUALITY_CHECK">
+                        Quality Check
+                      </SelectItem>
                       <SelectItem value="COMPLETED">Completed</SelectItem>
                       <SelectItem value="SHIPPED">Shipped</SelectItem>
                       <SelectItem value="DELIVERED">Delivered</SelectItem>
@@ -885,11 +1393,21 @@ export default function BatchManagementPage() {
               </div>
 
               <div>
-                <Label htmlFor="description" className="text-sm font-medium text-slate-700">Description</Label>
+                <Label
+                  htmlFor="description"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Description
+                </Label>
                 <Textarea
                   id="description"
                   value={editingBatch?.description}
-                  onChange={(e) => setEditingBatch({ ...editingBatch, description: e.target.value })}
+                  onChange={(e) =>
+                    setEditingBatch({
+                      ...editingBatch,
+                      description: e.target.value,
+                    })
+                  }
                   className="mt-1 border-slate-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
                   rows={3}
                 />
@@ -908,13 +1426,49 @@ export default function BatchManagementPage() {
                   className="bg-blue-600 hover:bg-blue-700 text-sm"
                   disabled={isUpdating}
                 >
-                  {isUpdating && <Spinner size={16} className="mr-2 animate-spin" />}
+                  {isUpdating && (
+                    <Spinner size={16} className="mr-2 animate-spin" />
+                  )}
                   Save Changes
                 </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Logistics Bidding Modal */}
+        {filteredAndSortedBatches.map((batch) => (
+          <LogisticsBidding
+            key={`logistics-${batch.id}`}
+            isOpen={
+              showLogisticsBidding && selectedBatchForBidding === batch.id
+            }
+            onClose={() => {
+              setShowLogisticsBidding(false);
+              setSelectedBatchForBidding(null);
+            }}
+            batchId={batch.id}
+            batchNumber={batch.batchNumber}
+            manufacturerId={batch.manufacturerId || "manufacturer-id"} // You'll need to get this from your auth context
+            selectedLogisticsBidId={batch.selectedLogisticsBidId}
+          />
+        ))}
+
+        {/* Supplier Bidding Modal */}
+        {filteredAndSortedBatches.map((batch) => (
+          <SupplierBidding
+            key={`supplier-${batch.id}`}
+            isOpen={showSupplierBidding && selectedBatchForBidding === batch.id}
+            onClose={() => {
+              setShowSupplierBidding(false);
+              setSelectedBatchForBidding(null);
+            }}
+            batchId={batch.id}
+            batchNumber={batch.batchNumber}
+            manufacturerId={batch.manufacturerId || "manufacturer-id"} // You'll need to get this from your auth context
+            selectedSupplierBidId={batch.selectedSupplierBidId}
+          />
+        ))}
       </div>
     </div>
   );

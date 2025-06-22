@@ -104,54 +104,6 @@ export function ManufacturerSidebar({
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/manufacturer/certificates">
-                    <FileText className="!size-5" />
-                    <span>Certificates</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/manufacturer/logistics">
-                    <Truck className="!size-5" />
-                    <span>Logistics Partners</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/manufacturer/qr-system">
-                    <QrCode className="!size-5" />
-                    <span>QR System</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="py-6 text-lg duration-200 transition-colors"
-                  asChild
-                >
-                  <Link href="/manufacturer/traceability">
-                    <Leaf className="!size-5" />
-                    <span>Traceability</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -159,14 +111,6 @@ export function ManufacturerSidebar({
 
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/manufacturer/profile">
-                <User className="!size-5" />
-                <span>Profile</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Button
